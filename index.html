@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>For Harshita</title>
+    <style>
+        body {
+            background-color: #59011a; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            position: relative;
+        }
+
+        #heartCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+            text-align: center;
+            z-index: 2; 
+            max-width: 90%;
+            width: 400px;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            color: #dcbbd6; 
+        }
+
+        p {
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+            color: #ccc;
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            align-items: center;
+            /* Added min-height to prevent layout shifts */
+            min-height: 60px; 
+        }
+
+        button {
+            padding: 12px 35px;
+            font-size: 1.1rem;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        #yesBtn {
+            background-color: #B087A3; 
+            color: #382329;
+            box-shadow: 0 4px 15px rgba(176, 135, 163, 0.4);
+            position: relative;
+            z-index: 10;
+        }
+
+        #yesBtn:hover {
+            transform: scale(1.05);
+            background-color: #c9a0bc;
+        }
+
+        #noBtn {
+            background-color: rgba(255,255,255,0.1);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
+            /* REMOVED position: absolute so it sits correctly in flexbox */
+            /* Using transform for movement ensures smoothness */
+            transition: transform 0.3s ease; 
+        }
+
+    </style>
+</head>
+<body>
+
+    <canvas id="heartCanvas"></canvas>
+
+    <div class="container">
+        <h1>Harshita, Will you be my Valentine?</h1>
+        <p>🥺🥺🥺</p>
+        
+        <div class="buttons">
+            <button id="yesBtn" onclick="acceptLove()">Yes</button>
+            <button id="noBtn" onmouseover="moveButtonSmoothly()" ontouchstart="moveButtonSmoothly()">No</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('heartCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        let width, height;
+        let hearts = [];
+        const mouse = { x: undefined, y: undefined };
+
+        const colors = ['#FF67B3', '#C79EA9', '#DABAC2', '#BAB86C', '#FE66B2', '#38c74b']; 
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        window.addEventListener('mousemove', (e) => {
+            mouse.x = e.x;
+            mouse.y = e.y;
+        });
+        
+        window.addEventListener('touchmove', (e) => {
+            mouse.x = e.touches[0].clientX;
+            mouse.y = e.touches[0].clientY;
+        });
+
+        class Heart {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = height + Math.random() * 100;
+                this.velocity = {
+                    x: (Math.random() - 0.5) * 0.5, 
+                    y: -1 * (Math.random() * 1 + 0.5) 
+                };
+                this.size = Math.random() * 15 + 5; 
+                this.color = colors[Math.floor(Math.random() * colors.length)];
+            }
+
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.font = `${this.size}px Arial`;
+                ctx.fillText('❤', this.x, this.y);
+            }
+
+            update() {
+                this.y += this.velocity.y;
+                this.x += this.velocity.x;
+
+                const dx = mouse.x - this.x;
+                const dy = mouse.y - this.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                const maxDistance = 150; 
+
+                if (distance < maxDistance) {
+                    const forceDirectionX = dx / distance;
+                    const forceDirectionY = dy / distance;
+                    const force = (maxDistance - distance) / maxDistance;
+                    const repulsionStrength = 3; 
+                    this.x -= forceDirectionX * force * repulsionStrength;
+                    this.y -= forceDirectionY * force * repulsionStrength;
+                }
+
+                if (this.y < -50) {
+                    this.y = height + 50;
+                    this.x = Math.random() * width;
+                }
+            }
+        }
+
+        function initHearts() {
+            hearts = [];
+            const numberOfHearts = window.innerWidth < 600 ? 60 : 120; 
+            for (let i = 0; i < numberOfHearts; i++) {
+                hearts.push(new Heart());
+            }
+        }
+
+        function animateHearts() {
+            requestAnimationFrame(animateHearts);
+            ctx.clearRect(0, 0, width, height);
+            
+            hearts.forEach(heart => {
+                heart.update();
+                heart.draw();
+            });
+        }
+
+        initHearts();
+        animateHearts();
+
+
+        /* --- SMOOTH BUTTON LOGIC --- */
+        const noBtn = document.getElementById('noBtn');
+        
+        function moveButtonSmoothly() {
+            // Limits how far it can run from its original spot (150px radius)
+            // This keeps it "reachable" but elusive
+            const maxMove = 150; 
+            
+            const randomX = (Math.random() - 0.5) * (maxMove * 2);
+            const randomY = (Math.random() - 0.5) * (maxMove * 2);
+
+            // Using transform means it moves visually without breaking the layout
+            noBtn.style.transform = `translate(${randomX}px, ${randomY}px)`;
+        }
+
+        /* --- SUCCESS ACTION --- */
+        function acceptLove() {
+            document.querySelector('.buttons').innerHTML = "";
+            document.querySelector('.container').innerHTML = `
+                <h1 style="font-size: 3rem;">YAAAY! 💖</h1>
+                <p>😘</p>
+            `;
+            hearts.forEach(heart => {
+                heart.velocity.y = -5; 
+                heart.color = "#ff4d6d"; 
+            });
+        }
+    </script>
+</body>
+</html>
